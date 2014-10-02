@@ -2,7 +2,13 @@
 
 ### What is ThreejsModelMultiLoader?
 
-This is an example-driven module for threejs modules and projects.
+This is a loader for 3D files into threejs.
+Supported formats are:
+- DAE (Autodesk collada)
+- JSON (converted by the official threejs converter)
+- JSON TREE (A split up version of the JSON format, optimized for streaming)
+- TARGZ (A compressed version of the JSON format, optimized for size)
+- TARGZ TREE(A compressed version of the JSON TREE format, optimized for size and streaming)
 
 This module is preset via the [generator-threejs-module](http://github.com/bunnybones1/generator-threejs-module) yeoman generator.
 To begin development, simply run:
