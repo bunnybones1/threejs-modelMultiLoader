@@ -1,6 +1,6 @@
 {
   "name": "threejs-modelmultiloader",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A threejs model loader that supports DAE, JSON and a few custom variations of JSON which support streaming and compression.",
   "main": "index.js",
   "license": "MIT",
