@@ -1,43 +1,43 @@
 {
-  "name": "threejs-modelMultiLoader",
-  "description": "threejs-modelMultiLoader",
-  "version": "0.0.1",
-  "homepage": "",
+  "name": "threejs-modelmultiloader",
+  "version": "1.0.0",
+  "description": "A threejs model loader that supports DAE, JSON and a few custom variations of JSON which support streaming and compression.",
+  "main": "index.js",
+  "license": "MIT",
   "author": {
     "name": "Tomasz Dysinski",
-    "url": "http://www.bunnybones.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
-  "bugs": {
-    "url": ""
-  },
-  "licenses": [
-    {
-      "type": "MIT"
-    }
-  ],
-  "main": "Gruntfile.js",
-  "engines": {
-    "node": ">= 0.8.0"
+    "email": "oz@bunnybones.com",
+    "url": "https://github.com/bunnybones1"
   },
   "dependencies": {
-    "globalizejs": "0.0.1",
-    "grunt-open": "^0.2.3",
+    "grunt": "^0.4.5",
+    "grunt-packsplitthreejsmodel": "git://github.com/bunnybones1/grunt-packsplitthreejsmodel",
+    "grunt-splitthreejsmodel": "git://github.com/bunnybones1/grunt-splitthreejsmodel",
+    "loadandrunscripts": "^1.0.0",
     "lodash": "^2.4.1",
-    "signals": "^1.0.0"
+    "signals": "^1.0.0",
+    "threejs-managed-view": "^1.0.0",
+    "urlparams": "^1.0.0"
   },
-  "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-connect": "~0.3.0",
-    "grunt-contrib-livereload": "~0.1.2",
-    "grunt-contrib-watch": "~0.4.4",
-    "grunt-watchify": "~0.0.3"
+  "devDependencies": {},
+  "scripts": {
+    "test": "beefy test.js --live --open"
   },
-  "peerDependencies": {
-    "grunt": "~0.4.1"
+  "keywords": [
+    "threejs",
+    "model",
+    "loader",
+    "streaming",
+    "targz",
+    "collada",
+    "dae"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bunnybones1/threejs-modelmultiloader.git"
   },
-  "keywords": []
+  "homepage": "https://github.com/bunnybones1/threejs-modelmultiloader",
+  "bugs": {
+    "url": "https://github.com/bunnybones1/threejs-modelmultiloader/issues"
+  }
 }
