@@ -14,7 +14,7 @@ function onReady() {
 	var temp = getURLParam('model');
 	if(temp !== undefined) url = temp;
 
-	var loadMode = require('./src/loaders/Modes').JSONTREE;
+	var loadMode = MultiLoader.MODES.JSONTREE;
 	var stream = true;
 
 	var materials = {

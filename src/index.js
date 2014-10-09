@@ -95,4 +95,6 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 	return base;
 }
 
+MultiLoader.MODES = LoadModes;
+
 module.exports = MultiLoader;
