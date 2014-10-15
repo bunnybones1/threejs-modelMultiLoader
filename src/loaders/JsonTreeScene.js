@@ -126,7 +126,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		return object;
 	},
 	createMesh: function(jsonData, path, geometry) {
-		var object = createObject(jsonData, path);
+		var object = this.createObject(jsonData, path);
 		object = this.promoteObjectToMesh(object, geometry);
 		return object;
 	},
