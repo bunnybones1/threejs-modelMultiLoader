@@ -19,7 +19,13 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 	var base = new THREE.Object3D();
 	var onNewMeshSignal = new signals.Signal();
 	base.onNewMeshSignal = onNewMeshSignal;
+	var onNewObjectSignal = new signals.Signal();
+	base.onNewObjectSignal = onNewObjectSignal;
 
+
+	function onObjectLoad( child ) {
+		onNewObjectSignal.dispatch( child );
+	}
 
 	function onMeshLoad( child ) {
 		var pivot, mesh;
@@ -77,7 +83,7 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 			break;
 		case LoadModes.JSONTREE:
 			loader = new loaders.JsonTreeScene( manager);
-			loader.load( baseFilePath, geometryPath, onSceneLoad, onMeshLoad, stream);
+			loader.load( baseFilePath, geometryPath, onSceneLoad, onObjectLoad, onMeshLoad, stream);
 			break;
 		case LoadModes.TARGZ:
 			loader = new loaders.TarGzScene( manager);

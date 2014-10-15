@@ -12,13 +12,14 @@ var p = JsonTreeSceneLoader.prototype = {
 	geometries: undefined,
 	objectsWaitingForGeometriesByGeometryPaths: undefined,
 	pathsByObject: undefined,
-	load: function (path, pathGeometries, onSceneLoad, onMeshLoad, stream) {
+	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, stream) {
 		this.path = path;
 		this.stream = stream;
 		this.pathBase = path.substring(0, path.lastIndexOf('/')+1);
 		path = this.pathCropBase(path);
 		this.pathGeometries = pathGeometries;
 		this.onSceneLoad = onSceneLoad;
+		this.onObjectLoad = onObjectLoad;
 		this.onMeshLoad = onMeshLoad;
 		this.objectsByPath = {};
 		this.geometries = {};
@@ -122,13 +123,14 @@ var p = JsonTreeSceneLoader.prototype = {
 			object.quaternion.z = jsonData.quaternion[2];
 			object.quaternion.w = jsonData.quaternion[3];
 		}
-
+		this.onObjectLoad(object);
 		return object;
 	},
 	createMesh: function(jsonData, path, geometry) {
 		var object = this.createObject(jsonData, path);
-		object = this.promoteObjectToMesh(object, geometry);
-		return object;
+		var mesh = this.promoteObjectToMesh(object, geometry);
+		this.onMeshLoad(mesh);
+		return mesh;
 	},
 	promoteObjectToMesh: function(object, geometry) {
 		var mesh = new THREE.Mesh(geometry);
@@ -146,13 +148,13 @@ var p = JsonTreeSceneLoader.prototype = {
 		for (var i = object.children.length - 1; i >= 0; i--) {
 			mesh.add(object.children[i]);
 		};
-		this.onMeshLoad(mesh);
 		var path = object.path;
 		this.objectsByPath[path] = mesh;
 
 		if(object === this.root) {
 			this.root = mesh;
 		}
+		this.onMeshLoad(mesh);
 		return mesh;
 	},
 	incrementAndCheckLoad: function() {
