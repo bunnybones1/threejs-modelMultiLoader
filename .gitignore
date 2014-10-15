@@ -3,3 +3,8 @@ node_modules
 *.log
 .DS_Store
 bundle.js
+assets/models/parseTest/geometry
+assets/models/parseTest/parse.autodesk
+assets/models/parseTest/parse.autodesk.full.tar.gz
+assets/models/parseTest/parse.autodesk.json
+assets/models/parseTest/parse.autodesk.tree.tar.gz

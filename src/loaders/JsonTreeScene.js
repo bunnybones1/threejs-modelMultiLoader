@@ -130,7 +130,9 @@ var p = JsonTreeSceneLoader.prototype = {
 		mesh.materialName = object.materialName;
 		mesh.position.copy(object.position);
 		mesh.scale.copy(object.scale);
-		mesh.rotation.copy(object.rotation);
+		// mesh.rotation.x = 0;
+		// mesh.rotation.y = 0;
+		// mesh.rotation.z = 0;
 		for (var i = object.children.length - 1; i >= 0; i--) {
 			mesh.add(object.children[i]);
 		};
