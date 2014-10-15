@@ -71,11 +71,11 @@ var p = JsonTreeSceneLoader.prototype = {
 	integrateObject: function(object, path) {
 		// console.log('integrate object', path);
 		var parentPath = path.substring(0, path.lastIndexOf('/'));
+
 		var parentObject = this.objectsByPath[parentPath];
 		var placeholder = parentObject.getObjectByName(object.name);
 		parentObject.remove(placeholder);
 		parentObject.add(object);
-		if(object.parent === this.root) object.rotation.x += Math.PI * -.5;
 	},
 	integrateGeometry: function(geometry, path) {
 		// console.log('integrate geometry', path);
@@ -95,6 +95,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		this.objectsByPath[path] = object;
 		var name = path.substring(path.lastIndexOf('/')+1, path.length);
 		object.name = name;
+
 		var childCount = 0;
 		for(var childName in jsonData.children) {
 			JSONLoader.load(this.pathBase + path + '/' + childName + '/index.json', this.childRecieved, this.childError);
@@ -114,6 +115,14 @@ var p = JsonTreeSceneLoader.prototype = {
 				this.objectsWaitingForGeometriesByGeometryPaths[geometryName].push(object);
 			}
 		}
+		
+		if(jsonData.quaternion) {
+			object.quaternion.x = jsonData.quaternion[0];
+			object.quaternion.y = jsonData.quaternion[1];
+			object.quaternion.z = jsonData.quaternion[2];
+			object.quaternion.w = jsonData.quaternion[3];
+		}
+
 		return object;
 	},
 	createMesh: function(jsonData, path, geometry) {
@@ -126,13 +135,14 @@ var p = JsonTreeSceneLoader.prototype = {
 		mesh.path = object.path;
 		var parent = object.parent;
 		if(parent) parent.remove(object);
+		if(parent) parent.add(mesh);
 		mesh.name = object.name;
 		mesh.materialName = object.materialName;
 		mesh.position.copy(object.position);
 		mesh.scale.copy(object.scale);
-		// mesh.rotation.x = 0;
-		// mesh.rotation.y = 0;
-		// mesh.rotation.z = 0;
+		mesh.rotation.x = object.rotation.x;
+		mesh.rotation.y = object.rotation.y;
+		mesh.rotation.z = object.rotation.z;
 		for (var i = object.children.length - 1; i >= 0; i--) {
 			mesh.add(object.children[i]);
 		};
@@ -140,7 +150,6 @@ var p = JsonTreeSceneLoader.prototype = {
 		var path = object.path;
 		this.objectsByPath[path] = mesh;
 
-		if(parent) parent.add(mesh);
 		if(object === this.root) {
 			this.root = mesh;
 		}
