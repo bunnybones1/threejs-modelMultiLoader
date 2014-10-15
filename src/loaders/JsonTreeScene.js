@@ -32,22 +32,11 @@ var p = JsonTreeSceneLoader.prototype = {
 		JSONLoader.load(this.pathBase + path + '/index.json', this.childRecieved, this.childError);
 		this.totalLoading++;
 	},
+
 	childRecieved: function(jsonData, path) {
 		path = this.pathCropBase(path);
 		path = path.substring(0, path.lastIndexOf('/index.json'));
-		var object;
-
-		if(jsonData.geometry) {
-			var geometryPath = this.geometryPath + jsonData.geometry;
-			var relaventGeometry = this.geometries[jsonData.geometry];
-			if(relaventGeometry) {
-				object = this.createMesh(jsonData, path, relaventGeometry);
-			} else {
-				object = this.createObject(jsonData, path);
-			}
-		} else {
-			object = this.createObject(jsonData, path);
-		}
+		var object = this.createObject(jsonData, path);
 
 		if(this.totalLoaded == 0) {
 			this.root = object;
@@ -58,9 +47,11 @@ var p = JsonTreeSceneLoader.prototype = {
 
 		this.incrementAndCheckLoad();
 	},
+
 	childError: function(xhr) {
 		throw(xhr);
 	},
+
 	geometryRecieved: function(jsonData, path) {
 		path = this.pathCropGeometries(path);
 		path = path.substring(0, path.lastIndexOf('.json'));
@@ -69,6 +60,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		this.integrateGeometry(geometry, path);
 		this.incrementAndCheckLoad();
 	},
+
 	integrateObject: function(object, path) {
 		// console.log('integrate object', path);
 		var parentPath = path.substring(0, path.lastIndexOf('/'));
@@ -78,17 +70,20 @@ var p = JsonTreeSceneLoader.prototype = {
 		parentObject.remove(placeholder);
 		parentObject.add(object);
 	},
+
 	integrateGeometry: function(geometry, path) {
 		// console.log('integrate geometry', path);
 		this.geometries[path] = geometry;
 		var objectsToPromote = this.objectsWaitingForGeometriesByGeometryPaths[path];
 		if(objectsToPromote) {
 			for (var i = objectsToPromote.length - 1; i >= 0; i--) {
-				this.promoteObjectToMesh(objectsToPromote[i], geometry);
+				var mesh = this.promoteObjectToMesh(objectsToPromote[i], geometry);
+				// this.isolationTest(mesh);
 			};
 		}
 		delete this.objectsWaitingForGeometriesByGeometryPaths[path];
 	},
+
 	createObject: function(jsonData, path) {
 		var object = this.threeObjectJSONLoader.parseObject(jsonData);
 		object.path = path;
@@ -108,12 +103,17 @@ var p = JsonTreeSceneLoader.prototype = {
 		var geometryName = jsonData.geometry;
 		if(geometryName) {
 			var geometryPath = this.pathGeometries + geometryName;
-			if(!this.objectsWaitingForGeometriesByGeometryPaths[geometryName]) {
-				this.objectsWaitingForGeometriesByGeometryPaths[geometryName] = [object];
-				JSONLoader.load(geometryPath + '.json', this.geometryRecieved, this.childError);
-				this.totalLoading++;
+			var geometry = this.geometries[geometryName];
+			if(geometry) {
+				object = this.promoteObjectToMesh(object, geometry);
 			} else {
-				this.objectsWaitingForGeometriesByGeometryPaths[geometryName].push(object);
+				if(!this.objectsWaitingForGeometriesByGeometryPaths[geometryName]) {
+					this.objectsWaitingForGeometriesByGeometryPaths[geometryName] = [object];
+					JSONLoader.load(geometryPath + '.json', this.geometryRecieved, this.childError);
+					this.totalLoading++;
+				} else {
+					this.objectsWaitingForGeometriesByGeometryPaths[geometryName].push(object);
+				}
 			}
 		}
 		
@@ -124,27 +124,25 @@ var p = JsonTreeSceneLoader.prototype = {
 			object.quaternion.w = jsonData.quaternion[3];
 		}
 		this.onObjectLoad(object);
+
+
 		return object;
 	},
-	createMesh: function(jsonData, path, geometry) {
-		var object = this.createObject(jsonData, path);
-		var mesh = this.promoteObjectToMesh(object, geometry);
-		this.onMeshLoad(mesh);
-		return mesh;
-	},
+
 	promoteObjectToMesh: function(object, geometry) {
 		var mesh = new THREE.Mesh(geometry);
 		mesh.path = object.path;
-		var parent = object.parent;
-		if(parent) parent.remove(object);
-		if(parent) parent.add(mesh);
 		mesh.name = object.name;
+		var parent = object.parent;
 		mesh.materialName = object.materialName;
 		mesh.position.copy(object.position);
 		mesh.scale.copy(object.scale);
 		mesh.rotation.x = object.rotation.x;
 		mesh.rotation.y = object.rotation.y;
 		mesh.rotation.z = object.rotation.z;
+		if(parent) parent.remove(object);
+		if(parent) parent.add(mesh);
+
 		for (var i = object.children.length - 1; i >= 0; i--) {
 			mesh.add(object.children[i]);
 		};
@@ -157,15 +155,18 @@ var p = JsonTreeSceneLoader.prototype = {
 		this.onMeshLoad(mesh);
 		return mesh;
 	},
+
 	incrementAndCheckLoad: function() {
 		this.totalLoaded++;
 		if(this.totalLoading == this.totalLoaded && !this.stream) {
 			this.onSceneLoad({scene: this.root});
 		}
 	},
+
 	pathCropBase: function(path) {
 		return path.substring(this.pathBase.length, path.length);
 	},
+
 	pathCropGeometries: function(path) {
 		return path.substring(this.pathGeometries.length, path.length);
 	}
