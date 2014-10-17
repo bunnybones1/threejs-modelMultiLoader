@@ -12,7 +12,7 @@ var p = JsonTreeSceneLoader.prototype = {
 	geometries: undefined,
 	objectsWaitingForGeometriesByGeometryPaths: undefined,
 	pathsByObject: undefined,
-	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, stream) {
+	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, onComplete, stream) {
 		this.path = path;
 		this.stream = stream;
 		this.pathBase = path.substring(0, path.lastIndexOf('/')+1);
@@ -20,6 +20,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		this.pathGeometries = pathGeometries;
 		this.onSceneLoad = onSceneLoad;
 		this.onObjectLoad = onObjectLoad;
+		this.onComplete = onComplete;
 		this.onMeshLoad = onMeshLoad;
 		this.objectsByPath = {};
 		this.geometries = {};
@@ -161,6 +162,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		if(this.totalLoading == this.totalLoaded && !this.stream) {
 			this.onSceneLoad({scene: this.root});
 		}
+		this.onComplete();
 	},
 
 	pathCropBase: function(path) {

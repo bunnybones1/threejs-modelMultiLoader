@@ -21,10 +21,16 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 	base.onNewMeshSignal = onNewMeshSignal;
 	var onNewObjectSignal = new signals.Signal();
 	base.onNewObjectSignal = onNewObjectSignal;
+	var onCompleteSignal = new signals.Signal();
+	base.onCompleteSignal = onCompleteSignal;
 
 
 	function onObjectLoad( child ) {
 		onNewObjectSignal.dispatch( child );
+	}
+
+	function onCompleteLoad( child ) {
+		onCompleteSignal.dispatch( child );
 	}
 
 	function onMeshLoad( child ) {
@@ -83,7 +89,7 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 			break;
 		case LoadModes.JSONTREE:
 			loader = new loaders.JsonTreeScene( manager);
-			loader.load( baseFilePath, geometryPath, onSceneLoad, onObjectLoad, onMeshLoad, stream);
+			loader.load( baseFilePath, geometryPath, onSceneLoad, onObjectLoad, onMeshLoad, onCompleteLoad, stream);
 			break;
 		case LoadModes.TARGZ:
 			loader = new loaders.TarGzScene( manager);
