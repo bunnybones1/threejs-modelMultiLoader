@@ -53,7 +53,8 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 	function onSceneLoad( data ) {
 		var root = data.scene;
 		var transplantObjects = false;
-		if(loadMode != LoadModes.JSONTREE && loadMode != LoadModes.TARGZTREE) {
+		var allAtOnce = (loadMode != LoadModes.JSONTREE && loadMode != LoadModes.TARGZTREE);
+		if(allAtOnce) {
 			root.traverse(onMeshLoad);
 			transplantObjects = true;
 		}
@@ -67,6 +68,9 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 		}
 
 		base.add(root);
+		if(allAtOnce) {
+			onCompleteLoad(root);
+		}
 	};
 
 	var manager = new THREE.LoadingManager();
