@@ -2,14 +2,13 @@
 
 var path = require('path');
 
-var lrSnippet  = require('grunt-contrib-livereload/lib/utils').livereloadSnippet;
 var mountFolder = function(connect, dir) {
   return connect.static(path.resolve(dir));
 };
 
 var models = [
-  // 'assets/models/parseTest/parse.autodesk.dae',
-  'assets/models/v6/v6.autodesk.dae'
+  'assets/models/parseTest/parse.autodesk.dae',
+  // 'assets/models/v6/v6.autodesk.dae'
 ]
 module.exports = function(grunt) {
   grunt.initConfig({
@@ -41,6 +40,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-splitthreejsmodel');
   grunt.loadNpmTasks('grunt-packsplitthreejsmodel');
 
-  grunt.registerTask('split', ['grunt-splitthreejsmodel']);
-  grunt.registerTask('pack', ['grunt-packsplitthreejsmodel']);
+  grunt.registerTask('split', ['splitthreejsmodel']);
+  grunt.registerTask('pack', ['packsplitthreejsmodel']);
 };

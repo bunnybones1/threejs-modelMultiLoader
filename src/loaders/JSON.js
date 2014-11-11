@@ -14,6 +14,7 @@ var JSONLoader = {
 		}
 		xmlhttp.open("GET", url, true);
 		xmlhttp.send();
+		return xmlhttp;
 	}
 }
 

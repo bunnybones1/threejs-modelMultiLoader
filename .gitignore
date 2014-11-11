@@ -7,4 +7,5 @@ assets/models/parseTest/geometry
 assets/models/parseTest/parse.autodesk
 assets/models/parseTest/parse.autodesk.full.tar.gz
 assets/models/parseTest/parse.autodesk.json
+assets/models/parseTest/parse.autodesk.hierarchy.json
 assets/models/parseTest/parse.autodesk.tree.tar.gz

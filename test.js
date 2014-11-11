@@ -14,7 +14,7 @@ function onReady() {
 	var temp = getURLParam('model');
 	if(temp !== undefined) url = temp;
 
-	var loadMode = MultiLoader.MODES.JSONTREE;
+	var loadMode = MultiLoader.MODES.JSONJITGEOM;
 	var stream = true;
 
 	var materials = {
@@ -57,7 +57,42 @@ function onReady() {
 		})
 	}
 	materials.glassTinted = materials.glassClear;
-	var loader = new MultiLoader(assetUrlBase + url, view.scene, materials, loadMode, stream);
+	var multiLoadedObject = new MultiLoader(assetUrlBase + url, view.scene, materials, loadMode, stream, false);
+
+	setTimeout(function() {
+		multiLoadedObject.showByName('all/groundPlane', false, function(){
+			console.log('loaded!!');
+		});
+	}, 1000);
+	setTimeout(function() {
+		multiLoadedObject.showByName('all/groundPlane/niceTeapot', true, function(){
+			console.log('loaded!!!!');
+		});
+	}, 2000);
+	setTimeout(function() {
+		multiLoadedObject.hideByName('all/groundPlane/niceTeapot', true);
+	}, 2030);
+	setTimeout(function() {
+		multiLoadedObject.showByName('all/groundPlane/niceTeapot', true, function(){
+			console.log('loaded!!!!');
+		});
+	}, 2060);
+	setTimeout(function() {
+		multiLoadedObject.hideByName('all/groundPlane/niceTeapot', true);
+	}, 2090);
+	setTimeout(function() {
+		multiLoadedObject.showByName('all/groundPlane/niceTeapot', true, function(){
+			console.log('loaded!!!!');
+		});
+	}, 2120);
+	setTimeout(function() {
+		multiLoadedObject.hideByName('all/groundPlane/niceTeapot', true);
+	}, 2150);
+	setTimeout(function() {
+		multiLoadedObject.showByName('all/groundPlane/niceTeapot', true, function(){
+			console.log('loaded!!!!');
+		});
+	}, 2180);
 
 }
 

@@ -3,5 +3,6 @@ module.exports = {
 	JSON: 1,
 	JSONTREE: 2,
 	TARGZ: 3,
-	TARGZTREE: 4
+	TARGZTREE: 4,
+	JSONJITGEOM: 5
 }

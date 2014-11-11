@@ -5,7 +5,7 @@ var LoadModes = require('./loaders/Modes'),
 	signals = require('signals'),
 	materialMatcher = require('./materials/matcher');
 
-function MultiLoader(url, targetParent, materials, loadMode, stream) {
+function MultiLoader(url, targetParent, materials, loadMode, stream, autoLoadAllGeometries) {
 
 	stream = stream;
 	console.log('loading', url);
@@ -95,6 +95,10 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 			loader = new loaders.JsonTreeScene( manager);
 			loader.load( baseFilePath, geometryPath, onSceneLoad, onObjectLoad, onMeshLoad, onCompleteLoad, stream);
 			break;
+		case LoadModes.JSONJITGEOM:
+			loader = new loaders.JsonJITGeomScene( manager);
+			loader.load( baseFilePath + '.hierarchy.json', geometryPath, onSceneLoad, onObjectLoad, onMeshLoad, onCompleteLoad, stream, autoLoadAllGeometries);
+			break;
 		case LoadModes.TARGZ:
 			loader = new loaders.TarGzScene( manager);
 			loader.load( baseFilePath + '.full.tar.gz', onSceneLoad);
@@ -106,8 +110,23 @@ function MultiLoader(url, targetParent, materials, loadMode, stream) {
 			loader.load( baseFilePath + '.tree.tar.gz', onSceneLoad, stream);
 			break;
 	}
-
+	base.loader = loader;
 	targetParent.add(base);
+
+	base.showByName = function(name, recursive, callback) {
+		if(loadMode == LoadModes.JSONJITGEOM) {
+			loader.showByName(name, recursive, callback);
+		} else {
+			console.log('Loadmode', loadMode, 'does not support showByName');
+		}
+	}
+	base.hideByName = function(name, recursive) {
+		if(loadMode == LoadModes.JSONJITGEOM) {
+			loader.hideByName(name, recursive);
+		} else {
+			console.log('Loadmode', loadMode, 'does not support showByName');
+		}
+	}
 	return base;
 }
 
