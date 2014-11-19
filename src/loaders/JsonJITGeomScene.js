@@ -228,7 +228,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		return path.substring(this.pathGeometries.length, path.length);
 	},
 
-	notFound: function(name, callback) {
+	notFound: function(name) {
 		console.log(name, 'does not exist');
 		var slices = name.split('/');
 		slices[slices.length-1] = "notFound";
@@ -251,7 +251,7 @@ var p = JsonTreeSceneLoader.prototype = {
 			}
 		}
 		if(!object) {
-			object = this.notFound(name, callback);
+			object = this.notFound(name);
 		}
 		if(object) {
 			if(object.show) { 
@@ -274,7 +274,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		var objPath = this.path + '/' + name;
 		var object = this.objectsByPath[objPath];
 		if(!object) {
-			object = this.notFound(name, callback);
+			object = this.notFound(name);
 		}
 
 		if(object) {
