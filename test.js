@@ -93,6 +93,16 @@ function onReady() {
 			console.log('loaded!!!!');
 		});
 	}, 2180);
+	setTimeout(function() {
+		multiLoadedObject.showByName('all/groundPlane/niceTeapot', true, function(){
+			console.log('loaded!!!!');
+		});
+	}, 2180);
+	setTimeout(function() {
+		multiLoadedObject.showByName('all/groundPlane/somethingMissing', true, function(){
+			console.log('loaded!!!!');
+		});
+	}, 2280);
 
 }
 

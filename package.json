@@ -20,7 +20,10 @@
     "urlparams": "^1.0.0"
   },
   "devDependencies": {
-    "grunt-packsplitthreejsmodel": "^0.1.3"
+    "grunt-convertautodesktothree": "^0.2.1",
+    "grunt-packsplitthreejsmodel": "^0.1.3",
+    "grunt-splitthreejsmodel": "^1.0.1",
+    "grunt-threejs-model-manifest": "^0.2.1"
   },
   "scripts": {
     "test": "beefy test.js --live --open"

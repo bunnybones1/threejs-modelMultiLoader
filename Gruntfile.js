@@ -13,33 +13,50 @@ var models = [
 module.exports = function(grunt) {
   grunt.initConfig({
     //note that filenames will automatically be fixed into .json. This is to help simplify your configs when used in conjunction with grunt-convertautodesktothreejs
+    
+    convertautodesktothree: {
+      car: {
+        options: {
+          models : models
+        }
+      }
+    },
+
     splitthreejsmodel: {
-      options: {
-        // standaloneTest: true
-      },
-      default_options: {
+      car: {
         options: {
-          models: models
+          models : models
         }
       }
     },
 
-    //note that filenames will automatically be fixed into .json. This is to help simplify your configs when used in conjunction with grunt-convertautodesktothreejs
     packsplitthreejsmodel: {
-      options: {
-        // standaloneTest: true
-      },
-      default_options: {
+      car: {
         options: {
-          models: models
+          models : models
         }
       }
     },
-  });
 
+    threejs_model_manifest: {
+      car: {
+        options: {
+          models : models,
+          depth: 2
+        }
+      }
+    }
+
+  });
+  grunt.loadNpmTasks('grunt-convertautodesktothree');
   grunt.loadNpmTasks('grunt-splitthreejsmodel');
   grunt.loadNpmTasks('grunt-packsplitthreejsmodel');
-
-  grunt.registerTask('split', ['splitthreejsmodel']);
-  grunt.registerTask('pack', ['packsplitthreejsmodel']);
+  grunt.loadNpmTasks('grunt-threejs-model-manifest');
+  
+  grunt.registerTask('convertModel', ['convertautodesktothree']);
+  grunt.registerTask('splitModel', ['splitthreejsmodel']);
+  grunt.registerTask('packModel', ['packsplitthreejsmodel']);
+  grunt.registerTask('manifest', ['threejs_model_manifest']);
+  grunt.registerTask('prepModel', ['convertautodesktothree', 'splitModel', 'manifest', 'packModel']);
+  
 };

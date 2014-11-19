@@ -11,10 +11,10 @@ var p = JsonTreeSceneLoader.prototype = {
 	totalLoading: 0,
 	totalLoaded: 0,
 	objectsByPath: undefined,
+	objectPaths: undefined,
 	geometries: undefined,
 	objectsWaitingForGeometriesByGeometryPaths: undefined,
 	loadersByGeometryPaths: undefined,
-	pathsByObject: undefined,
 	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, onComplete, stream, autoLoadAllGeometries) {
 		this.path = path;
 		this.stream = stream;
@@ -30,6 +30,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		this.objectsByPath = {};
 		this.geometries = {};
 		this.cancelling = [];
+		this.objectPaths = [];
 		this.objectsWaitingForGeometriesByGeometryPaths = {};
 		this.loadersByGeometryPaths = {};
 		this.threeGeometryJSONLoader = new THREE.JSONLoader();
@@ -132,11 +133,26 @@ var p = JsonTreeSceneLoader.prototype = {
 		delete this.loadersByGeometryPaths[geometryName];
 	},
 
+	storeObject: function(path, object) {
+		this.objectsByPath[path] = object;
+		this.objectPaths.push(path);
+
+		//fix the alias for notFound
+		var slices = path.split('/');
+		if(slices[slices.length-1].indexOf("notFound") != -1){
+			slices[slices.length-1] = "notFound";
+		}
+		path = slices.join('/');
+
+		this.objectsByPath[path] = object;
+		this.objectPaths.push(path);
+	},
+
 	createObject: function(jsonData, path) {
 		var object = this.threeObjectJSONLoader.parseObject(jsonData);
 		object.path = path;
 		object.materialName = jsonData.material;
-		this.objectsByPath[path] = object;
+		this.storeObject(path, object);
 		var name = path.substring(path.lastIndexOf('/')+1, path.length);
 		object.name = name;
 
@@ -186,7 +202,7 @@ var p = JsonTreeSceneLoader.prototype = {
 			mesh.add(object.children[i]);
 		};
 		var path = object.path;
-		this.objectsByPath[path] = mesh;
+		this.storeObject(path, mesh);
 
 		if(object === this.root) {
 			this.root = mesh;
@@ -212,6 +228,14 @@ var p = JsonTreeSceneLoader.prototype = {
 		return path.substring(this.pathGeometries.length, path.length);
 	},
 
+	notFound: function(name, callback) {
+		console.log(name, 'does not exist');
+		var slices = name.split('/');
+		slices[slices.length-1] = "notFound";
+		name = slices.join('/');
+		return this.objectsByPath[this.path + '/' + name];
+	},
+
 	showByName: function(name, recursive, callback) {
 		var objPath = this.path + '/' + name;
 		var object = this.objectsByPath[objPath];
@@ -225,6 +249,9 @@ var p = JsonTreeSceneLoader.prototype = {
 					callback();
 				}
 			}
+		}
+		if(!object) {
+			object = this.notFound(name, callback);
 		}
 		if(object) {
 			if(object.show) { 
@@ -240,14 +267,16 @@ var p = JsonTreeSceneLoader.prototype = {
 			if(loading == 0) {
 				callback();
 			}
-		} else {
-			console.log(name, 'does not exist');
 		}
 	},
 
 	hideByName: function(name, recursive) {
 		var objPath = this.path + '/' + name;
 		var object = this.objectsByPath[objPath];
+		if(!object) {
+			object = this.notFound(name, callback);
+		}
+
 		if(object) {
 			if(object.hide) { object.hide(); }
 			if(recursive) {
@@ -255,8 +284,6 @@ var p = JsonTreeSceneLoader.prototype = {
 					if(obj.hide) { obj.hide(); }
 				});
 			}
-		} else {
-			console.log(name, 'does not exist');
 		}
 	},
 

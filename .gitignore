@@ -8,4 +8,7 @@ assets/models/parseTest/parse.autodesk
 assets/models/parseTest/parse.autodesk.full.tar.gz
 assets/models/parseTest/parse.autodesk.json
 assets/models/parseTest/parse.autodesk.hierarchy.json
+assets/models/parseTest/parse.autodesk.manifest.flat.json
+assets/models/parseTest/parse.autodesk.manifest.nested.json
 assets/models/parseTest/parse.autodesk.tree.tar.gz
+
