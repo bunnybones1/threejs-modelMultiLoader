@@ -230,9 +230,13 @@ var p = JsonTreeSceneLoader.prototype = {
 
 	notFound: function(name) {
 		console.log(name, 'does not exist');
-		var slices = name.split('/');
-		slices[slices.length-1] = "notFound";
-		name = slices.join('/');
+		if(name) {
+			var slices = name.split('/');
+			slices[slices.length-1] = 'notFound';
+			name = slices.join('/');
+		} else {
+			name = 'notFound'
+		}
 		return this.objectsByPath[this.path + '/' + name];
 	},
 
