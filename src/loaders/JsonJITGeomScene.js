@@ -5,7 +5,10 @@ function JsonTreeSceneLoader( manager) {
 
 var getURLParam = require('urlparams').getParam;
 
-
+var LOAD_UNAVAILABLE = -1,
+	LOAD_AVAILABLE = 0,
+	LOADING = 1,
+	LOADED = 2;
 
 var p = JsonTreeSceneLoader.prototype = {
 	totalLoading: 0,
@@ -15,11 +18,10 @@ var p = JsonTreeSceneLoader.prototype = {
 	geometries: undefined,
 	objectsWaitingForGeometriesByGeometryPaths: undefined,
 	loadersByGeometryPaths: undefined,
-	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, onComplete, stream, autoLoadAllGeometries) {
+	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, onComplete, stream) {
 		this.path = path;
 		this.stream = stream;
 		this.debug = false;
-		this.autoLoadAllGeometries = autoLoadAllGeometries;
 		this.pathBase = path.substring(0, path.lastIndexOf('/')+1);
 		path = this.pathCropBase(path);
 		this.pathGeometries = pathGeometries;
@@ -38,6 +40,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		this.hierarchyRecieved = this.hierarchyRecieved.bind(this);
 		this.geometryRecieved = this.geometryRecieved.bind(this);
 		this.showByName = this.showByName.bind(this);
+		this.hideByName = this.hideByName.bind(this);
 		this.childError = this.childError.bind(this);
 		JSONLoader.load(this.pathBase + path, this.hierarchyRecieved, this.childError);
 		this.totalLoading++;
@@ -82,6 +85,7 @@ var p = JsonTreeSceneLoader.prototype = {
 			for (var i = objectsToPromote.length - 1; i >= 0; i--) {
 				var object = objectsToPromote[i];
 				var mesh = this.promoteObjectToMesh(object, geometry);
+				mesh.loadStatus = LOADED;
 				object.geometryLoadCompleteCallback();
 				delete this.loadersByGeometryPaths[object.geometryName];
 				delete object.geometryLoadCompleteCallback;
@@ -101,6 +105,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		var geometry = this.geometries[geometryName];
 		if(geometry) {
 			object = this.promoteObjectToMesh(object, geometry);
+			object.loadStatus = LOADED;
 		} else {
 			object.geometryLoadCompleteCallback = callback;
 			if(!this.objectsWaitingForGeometriesByGeometryPaths[geometryName]) {
@@ -123,7 +128,6 @@ var p = JsonTreeSceneLoader.prototype = {
 		if(objectsWaitingForGeometry) {
 			for (var i = objectsWaitingForGeometry.length - 1; i >= 0; i--) {
 				var objectWaiting = objectsWaitingForGeometry.splice(i, 1)[0];
-				objectWaiting.visible = objectWaiting.targetVisiblility = false;
 				delete objectWaiting.geometryLoadCompleteCallback;
 			};
 		}
@@ -150,6 +154,7 @@ var p = JsonTreeSceneLoader.prototype = {
 
 	createObject: function(jsonData, path) {
 		var object = this.threeObjectJSONLoader.parseObject(jsonData);
+		while(object.children.length > 0) object.remove(object.children[0]);	//I only want the object
 		object.path = path;
 		object.materialName = jsonData.material;
 		this.storeObject(path, object);
@@ -160,18 +165,15 @@ var p = JsonTreeSceneLoader.prototype = {
 			object.add(this.createObject(jsonData.children[childName], path + '/' + childName));
 		}
 
-
 		var geometryName = jsonData.geometry;
 		if(geometryName) {
+			object.loadStatus = LOAD_AVAILABLE;
 			object.geometryName = geometryName;
 
-			object.visible = false;
-			this.decorateObjectWithShowAndHide(object);
+			this.decorateObjectWithJITGeometryAPI(object);
 		
-			if(this.autoLoadAllGeometries) {
-				console.log(geometryName);
-				object.show();
-			}
+		} else {
+			object.loadStatus = LOAD_UNAVAILABLE;
 		}
 		
 		if(jsonData.quaternion) {
@@ -181,6 +183,7 @@ var p = JsonTreeSceneLoader.prototype = {
 			object.quaternion.w = jsonData.quaternion[3];
 		}
 		this.onObjectLoad(object);
+		if(object.loadStatus === undefined) throw new Error('wtf');
 		return object;
 	},
 
@@ -195,8 +198,12 @@ var p = JsonTreeSceneLoader.prototype = {
 		mesh.rotation.x = object.rotation.x;
 		mesh.rotation.y = object.rotation.y;
 		mesh.rotation.z = object.rotation.z;
-		if(parent) parent.remove(object);
-		if(parent) parent.add(mesh);
+		if(parent) {
+			parent.remove(object);
+			parent.add(mesh);
+		} else {
+			throw new Error('wtf');
+		}
 
 		for (var i = object.children.length - 1; i >= 0; i--) {
 			mesh.add(object.children[i]);
@@ -208,7 +215,7 @@ var p = JsonTreeSceneLoader.prototype = {
 			this.root = mesh;
 		}
 
-		this.decorateObjectWithShowAndHide(mesh);
+		this.decorateObjectWithJITGeometryAPI(mesh);
 		this.onMeshLoad(mesh);
 		return mesh;
 	},
@@ -240,11 +247,36 @@ var p = JsonTreeSceneLoader.prototype = {
 		return this.objectsByPath[this.path + '/' + name];
 	},
 
-	showByName: function(name, recursive, callback) {
-		var objPath = this.path + '/' + name;
-		var object = this.objectsByPath[objPath];
+	showByName: function(name, recursive, childrenOnly) {
+		this.setVisibilityByName(name, true, recursive, childrenOnly);
+	},
+
+	hideByName: function(name, recursive, childrenOnly) {
+		this.setVisibilityByName(name, false, recursive, childrenOnly);
+	},
+
+	setVisibilityByName: function(name, state, recursive, childrenOnly) {
+		var object = this.getObjectByName(name);
+		if(!object) {
+			object = this.notFound(name);
+		}
+		if(object) {
+			if(!childrenOnly) {
+				object.visible = state;
+			}
+			// if(state, console.log(name));
+			if(recursive) {
+				object.traverse(function(obj) {
+					if(obj === object) return;
+					obj.visible = state;
+				});
+			}
+		}
+	},
+
+	loadByName: function(name, recursive, callback) {
+		var object = this.getObjectByName(name);
 		var loading = 0;
-		var id = ~~(Math.random() * 0xffffff);
 		function progressCallback() {
 			loading--;
 			if(this.debug) console.log(name, 'remaining geometries to load:', loading, id);
@@ -258,13 +290,13 @@ var p = JsonTreeSceneLoader.prototype = {
 			object = this.notFound(name);
 		}
 		if(object) {
-			if(object.show) { 
-				loading += object.show(progressCallback) ? 1 : 0;
+			if(object.load) { 
+				loading += object.load(progressCallback) ? 1 : 0;
 			}
 			if(recursive) {
 				object.traverse(function(obj) {
-					if(obj.show) { 
-						loading += obj.show(progressCallback) ? 1 : 0;
+					if(obj.load) { 
+						loading += obj.load(progressCallback) ? 1 : 0;
 					}
 				});
 			}
@@ -274,54 +306,46 @@ var p = JsonTreeSceneLoader.prototype = {
 		}
 	},
 
-	hideByName: function(name, recursive) {
-		var objPath = this.path + '/' + name;
-		var object = this.objectsByPath[objPath];
-		if(!object) {
-			object = this.notFound(name);
-		}
-
-		if(object) {
-			if(object.hide) { object.hide(); }
-			if(recursive) {
-				object.traverse(function(obj) {
-					if(obj.hide) { obj.hide(); }
-				});
-			}
-		}
+	cancelLoadByName: function(name, recursive, callback) {
+		throw new Error('Not implemented yet');
 	},
 
-	decorateObjectWithShowAndHide: function(object){
+	checkIfLoadedByName: function(name, recursive) {
+		var object = this.getObjectByName(name);
+		var loaded = object.loadStatus == LOADED || object.loadStatus == LOAD_UNAVAILABLE;
+		if(loaded && recursive) {
+			object.traverse(function(obj) {
+				if(obj.loadStatus != LOADED && obj.loadStatus != LOAD_UNAVAILABLE) {
+					loaded = loaded && false;
+					throw new Error('wtf');
+				}
+			})
+		}
+		return loaded;
+	},
+
+	decorateObjectWithJITGeometryAPI: function(object){
 		var _this = this;
 		object.targetVisiblility = object.visible;
-		object.show = function(callback) {
-			return _this.setVisibility(this, true, callback);
-		}.bind(object);
-		object.hide = function() {
-			_this.setVisibility(this, false);
-		}.bind(object);
+		object.load = function(callback) {
+			if(object.loadStatus === LOAD_AVAILABLE) {
+				object.loadStatus = LOADING;
+				_this.loadGeometryOf(object, callback);
+				return true;
+			}
+			return false;
+		};
+		object.unload = function(callback) {
+			throw new Error('not implemented yet');
+		};
+		object.cancelLoad = function(callback) {
+			throw new Error('not implemented yet');
+		};
 	},
 
-	setVisibility: function(object, state, callback) {
-		if(object.targetVisiblility == state) return false;
-		if(state == object.visible) return false;
-		object.targetVisiblility = state;
-		object.visible = state;
-		switch(state) {
-			case true:
-				if(object.geometryName) {
-					this.loadGeometryOf(object, callback);
-					return true;
-				}
-				break;
-			case false:
-			default:
-
-				if(object.geometryName) {
-					this.cancelLoadGeometryOf(object);
-				}
-		}
-		return false;
+	getObjectByName: function(name) {
+		var objPath = this.path + '/' + name;
+		return this.objectsByPath[objPath];
 	}
 }
 

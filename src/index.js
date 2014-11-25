@@ -113,18 +113,39 @@ function MultiLoader(url, targetParent, materials, loadMode, stream, autoLoadAll
 	base.loader = loader;
 	targetParent.add(base);
 
-	base.showByName = function(name, recursive, callback) {
+	base.loadByName = function(name, recursive, callback) {
 		if(loadMode == LoadModes.JSONJITGEOM) {
-			loader.showByName(name, recursive, callback);
+			loader.loadByName(name, recursive, callback);
+		} else {
+			console.log('Loadmode', loadMode, 'does not support loadByName');
+		}
+	}
+	base.cancelLoadByName = function(name, recursive, callback) {
+		if(loadMode == LoadModes.JSONJITGEOM) {
+			loader.cancelLoadByName(name, recursive, callback);
+		} else {
+			console.log('Loadmode', loadMode, 'does not support cancelLoadByName');
+		}
+	}
+	base.checkIfLoadedByName = function(name, recursive) {
+		if(loadMode == LoadModes.JSONJITGEOM) {
+			return loader.checkIfLoadedByName(name, recursive);
+		} else {
+			console.log('Loadmode', loadMode, 'does not support checkIfLoadedByName');
+		}
+	}
+	base.showByName = function(name, recursive, childrenOnly) {
+		if(loadMode == LoadModes.JSONJITGEOM) {
+			loader.showByName(name, recursive, childrenOnly);
 		} else {
 			console.log('Loadmode', loadMode, 'does not support showByName');
 		}
 	}
-	base.hideByName = function(name, recursive) {
+	base.hideByName = function(name, recursive, childrenOnly) {
 		if(loadMode == LoadModes.JSONJITGEOM) {
-			loader.hideByName(name, recursive);
+			loader.hideByName(name, recursive, childrenOnly);
 		} else {
-			console.log('Loadmode', loadMode, 'does not support showByName');
+			console.log('Loadmode', loadMode, 'does not support hideByName');
 		}
 	}
 	return base;
