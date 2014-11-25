@@ -21,7 +21,7 @@ var p = JsonTreeSceneLoader.prototype = {
 	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, onComplete, stream) {
 		this.path = path;
 		this.stream = stream;
-		this.debug = false;
+		this.debug = true;
 		this.pathBase = path.substring(0, path.lastIndexOf('/')+1);
 		path = this.pathCropBase(path);
 		this.pathGeometries = pathGeometries;
@@ -86,9 +86,11 @@ var p = JsonTreeSceneLoader.prototype = {
 				var object = objectsToPromote[i];
 				var mesh = this.promoteObjectToMesh(object, geometry);
 				mesh.loadStatus = LOADED;
-				object.geometryLoadCompleteCallback();
+				if(object.geometryLoadCompleteCallback) {
+					object.geometryLoadCompleteCallback();
+					delete object.geometryLoadCompleteCallback;
+				}
 				delete this.loadersByGeometryPaths[object.geometryName];
-				delete object.geometryLoadCompleteCallback;
 				delete object.geometryName;
 				// this.isolationTest(mesh);
 			};
@@ -106,15 +108,18 @@ var p = JsonTreeSceneLoader.prototype = {
 		if(geometry) {
 			object = this.promoteObjectToMesh(object, geometry);
 			object.loadStatus = LOADED;
+			return false;
 		} else {
-			object.geometryLoadCompleteCallback = callback;
 			if(!this.objectsWaitingForGeometriesByGeometryPaths[geometryName]) {
+				object.geometryLoadCompleteCallback = callback;
 				this.objectsWaitingForGeometriesByGeometryPaths[geometryName] = [object];
 				loader = JSONLoader.load(geometryPath + '.json', this.geometryRecieved, this.childError);
 				this.loadersByGeometryPaths[geometryName] = loader;
+				return true;
 				// this.totalLoading++;
 			} else {
 				this.objectsWaitingForGeometriesByGeometryPaths[geometryName].push(object);
+				return false;
 			}
 		}
 	},
@@ -277,9 +282,10 @@ var p = JsonTreeSceneLoader.prototype = {
 	loadByName: function(name, recursive, callback) {
 		var object = this.getObjectByName(name);
 		var loading = 0;
+		var _this = this;
 		function progressCallback() {
 			loading--;
-			if(this.debug) console.log(name, 'remaining geometries to load:', loading, id);
+			if(_this.debug) console.log(name, 'remaining geometries to load:', loading);
 			if(loading === 0) {
 				if(callback) {
 					callback();
@@ -300,6 +306,7 @@ var p = JsonTreeSceneLoader.prototype = {
 					}
 				});
 			}
+			console.log('geometries to load:', loading)
 			if(loading == 0) {
 				callback();
 			}
@@ -330,8 +337,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		object.load = function(callback) {
 			if(object.loadStatus === LOAD_AVAILABLE) {
 				object.loadStatus = LOADING;
-				_this.loadGeometryOf(object, callback);
-				return true;
+				return _this.loadGeometryOf(object, callback);
 			}
 			return false;
 		};
