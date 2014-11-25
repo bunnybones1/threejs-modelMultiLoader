@@ -5,7 +5,8 @@ function JsonTreeSceneLoader( manager) {
 
 var getURLParam = require('urlparams').getParam;
 
-var LOAD_UNAVAILABLE = -1,
+var SHOULDNT_EVEN_EXIST = -2,
+	LOAD_UNAVAILABLE = -1,
 	LOAD_AVAILABLE = 0,
 	LOADING = 1,
 	LOADED = 2;
@@ -21,7 +22,7 @@ var p = JsonTreeSceneLoader.prototype = {
 	load: function (path, pathGeometries, onSceneLoad, onObjectLoad, onMeshLoad, onComplete, stream) {
 		this.path = path;
 		this.stream = stream;
-		this.debug = true;
+		this.debug = false;
 		this.pathBase = path.substring(0, path.lastIndexOf('/')+1);
 		path = this.pathCropBase(path);
 		this.pathGeometries = pathGeometries;
@@ -78,15 +79,15 @@ var p = JsonTreeSceneLoader.prototype = {
 	},
 
 	integrateGeometry: function(geometry, path) {
-		// console.log('integrate geometry', path);
+		if(this.debug) console.log('integrate geometry', path);
 		this.geometries[path] = geometry;
 		var objectsToPromote = this.objectsWaitingForGeometriesByGeometryPaths[path];
 		if(objectsToPromote) {
 			for (var i = objectsToPromote.length - 1; i >= 0; i--) {
 				var object = objectsToPromote[i];
 				var mesh = this.promoteObjectToMesh(object, geometry);
-				mesh.loadStatus = LOADED;
 				if(object.geometryLoadCompleteCallback) {
+					// if(i != 0) debugger;
 					object.geometryLoadCompleteCallback();
 					delete object.geometryLoadCompleteCallback;
 				}
@@ -98,19 +99,19 @@ var p = JsonTreeSceneLoader.prototype = {
 		delete this.objectsWaitingForGeometriesByGeometryPaths[path];
 	},
 
-
 	loadGeometryOf: function(object, callback) {
 		// object.add(new THREE.Mesh(new THREE.SphereGeometry(10)));
 		var geometryName = object.geometryName;
-		if(this.debug) console.log('loading', geometryName);
 		var geometryPath = this.pathGeometries + geometryName;
 		var geometry = this.geometries[geometryName];
+		if(this.debug) console.log('REQUEST', geometryName);
 		if(geometry) {
+			if(this.debug) console.log('reusing', geometryName);
 			object = this.promoteObjectToMesh(object, geometry);
-			object.loadStatus = LOADED;
 			return false;
 		} else {
 			if(!this.objectsWaitingForGeometriesByGeometryPaths[geometryName]) {
+				if(this.debug) console.log('loading', geometryName);
 				object.geometryLoadCompleteCallback = callback;
 				this.objectsWaitingForGeometriesByGeometryPaths[geometryName] = [object];
 				loader = JSONLoader.load(geometryPath + '.json', this.geometryRecieved, this.childError);
@@ -118,7 +119,9 @@ var p = JsonTreeSceneLoader.prototype = {
 				return true;
 				// this.totalLoading++;
 			} else {
+				if(this.debug) console.log('waiting for', geometryName);
 				this.objectsWaitingForGeometriesByGeometryPaths[geometryName].push(object);
+				object.loadStatus = LOADING;
 				return false;
 			}
 		}
@@ -188,7 +191,6 @@ var p = JsonTreeSceneLoader.prototype = {
 			object.quaternion.w = jsonData.quaternion[3];
 		}
 		this.onObjectLoad(object);
-		if(object.loadStatus === undefined) throw new Error('wtf');
 		return object;
 	},
 
@@ -197,6 +199,8 @@ var p = JsonTreeSceneLoader.prototype = {
 		mesh.path = object.path;
 		mesh.name = object.name;
 		var parent = object.parent;
+		object.loadStatus = SHOULDNT_EVEN_EXIST;
+		mesh.loadStatus = LOADED;
 		mesh.materialName = object.materialName;
 		mesh.position.copy(object.position);
 		mesh.scale.copy(object.scale);
@@ -301,13 +305,14 @@ var p = JsonTreeSceneLoader.prototype = {
 			}
 			if(recursive) {
 				object.traverse(function(obj) {
+					if(object === obj) return;
 					if(obj.load) { 
 						loading += obj.load(progressCallback) ? 1 : 0;
 					}
 				});
 			}
-			console.log('geometries to load:', loading)
-			if(loading == 0) {
+			if(this.debug) console.log('geometries to load:', loading)
+			if(loading == 0 && callback) {
 				callback();
 			}
 		}
@@ -333,7 +338,6 @@ var p = JsonTreeSceneLoader.prototype = {
 
 	decorateObjectWithJITGeometryAPI: function(object){
 		var _this = this;
-		object.targetVisiblility = object.visible;
 		object.load = function(callback) {
 			if(object.loadStatus === LOAD_AVAILABLE) {
 				object.loadStatus = LOADING;
