@@ -207,6 +207,7 @@ var p = JsonTreeSceneLoader.prototype = {
 		mesh.rotation.x = object.rotation.x;
 		mesh.rotation.y = object.rotation.y;
 		mesh.rotation.z = object.rotation.z;
+		mesh.visible = object.visible;
 		if(parent) {
 			parent.remove(object);
 			parent.add(mesh);
