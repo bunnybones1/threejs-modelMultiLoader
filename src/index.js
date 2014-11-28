@@ -120,6 +120,13 @@ function MultiLoader(url, targetParent, materials, loadMode, stream, autoLoadAll
 			console.log('Loadmode', loadMode, 'does not support loadByName');
 		}
 	}
+	base.getByName = function(name) {
+		if(loadMode == LoadModes.JSONJITGEOM) {
+			return loader.getObjectByName(name);
+		} else {
+			console.log('Loadmode', loadMode, 'does not support loadByName');
+		}
+	}
 	base.cancelLoadByName = function(name, recursive, callback) {
 		if(loadMode == LoadModes.JSONJITGEOM) {
 			loader.cancelLoadByName(name, recursive, callback);
